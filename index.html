@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Roundcast 기록 옮기기</title><meta name="robots" content="noindex">
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0c1a14;color:#eef0e8;font:15px/1.6 -apple-system,"Noto Sans KR",sans-serif;padding:24px}
+.card{max-width:420px;width:100%;border:1px solid #c9a86a;border-radius:16px;padding:24px;background:#132a20}
+h1{font:600 22px Georgia,serif;margin:0 0 8px;color:#d4ae5f}p{margin:6px 0;color:#c7d2cb}
+a.btn{display:inline-block;margin-top:14px;padding:11px 18px;border-radius:999px;background:#c9a86a;color:#1b1406;text-decoration:none;font-weight:600}
+</style></head><body><div class="card"><h1>Roundcast</h1><p id="m">예전 기록을 확인하는 중…</p><a class="btn" id="go" href="https://roundcast.kr/" hidden>Roundcast 열기</a></div>
+<script>
+(async()=>{
+  const K=["gd_favs","rc_rounds","rc_plans","rc_npars","rc_courses","rc_pars","gd_dir","rc_sc_notice"],data={};let n=0;
+  try{K.forEach(k=>{const v=localStorage.getItem(k);if(v!=null){data[k]=v;n++}})}catch(e){}
+  const m=document.getElementById("m"),go=document.getElementById("go");
+  const cnt=k=>{try{const v=JSON.parse(data[k]||"[]");return Array.isArray(v)?v.length:0}catch(e){return 0}};
+  if(!n||!(cnt("gd_favs")+cnt("rc_rounds")+cnt("rc_plans"))){m.textContent="이 브라우저에는 예전 주소에 저장된 내 골프장·스코어 기록이 없습니다. (홈 화면에 추가한 앱으로 쓰셨다면 그 앱에서 이 주소를 열어 주세요.)";go.hidden=false;return}
+  const json=JSON.stringify({v:1,at:Date.now(),data});let bytes=new TextEncoder().encode(json),tag="import";
+  try{if(window.CompressionStream){const s=new Blob([bytes]).stream().pipeThrough(new CompressionStream("gzip"));bytes=new Uint8Array(await new Response(s).arrayBuffer());tag="importz"}}catch(e){}
+  let b="";for(let i=0;i<bytes.length;i+=0x8000)b+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));
+  const b64=btoa(b).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  m.textContent=`내 골프장 ${cnt("gd_favs")}곳 · 스코어카드 ${cnt("rc_rounds")}개 · 예약 ${cnt("rc_plans")}개를 새 주소로 옮깁니다…`;
+  setTimeout(()=>location.replace("https://roundcast.kr/#"+tag+"="+b64),900);
+})();
+</script></body></html>
